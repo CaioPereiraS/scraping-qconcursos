@@ -1,24 +1,21 @@
-#
-version: '3.8'
 services:
- dynamodb-local:
-   command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
-   image: "amazon/dynamodb-local:latest"
-   container_name: dynamodb-local
-   ports:
-     - "8000:8000"
-   volumes:
-     - "./docker/dynamodb:/home/dynamodblocal/data"
-   working_dir: /home/dynamodblocal
- app-node:
-   depends_on:
-     - dynamodb-local
-   image: amazon/aws-cli
-   container_name: app-node
-   ports:
-    - "8080:8080"
-   environment:
-     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-   command:
-    dynamodb describe-limits --endpoint-url ${AWS_ENDPOINT_URL} --region ${AWS_REGION_NAME}
+  postgres:
+    image: postgres:16-alpine
+    container_name: questionei-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: questionei
+      POSTGRES_PASSWORD: questionei_dev
+      POSTGRES_DB: questionei_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U questionei -d questionei_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
